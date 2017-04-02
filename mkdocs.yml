@@ -1,0 +1,5 @@
+site_name:  'BespON: Bespoken Object Notation'
+theme: readthedocs
+pages:
+- 'index.md'
+- 'spec_overview.md'
