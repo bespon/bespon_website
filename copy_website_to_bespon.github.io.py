@@ -20,3 +20,5 @@ for name in os.listdir(website_dir):
         shutil.copy(path, github_io_dir)
     else:
         shutil.copytree(path, os.path.join(github_io_dir, name))
+
+shutil.copy('CNAME', github_io_dir)

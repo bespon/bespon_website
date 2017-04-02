@@ -96,7 +96,7 @@ Now the requisite XKCD reference is out of the way, why BespON?
     structures, without ending up with bracket soup or half a page width of
     indentation.
   * **"Acceptable" performance** even when completely implemented in an
-    interpreted language.
+    interpreted language.  (See the benchmarks below.)
 
 
 
@@ -110,6 +110,57 @@ There is also a
 [language-agnostic test suite](https://github.com/bespon/bespon_tests),
 which the Python implementation passes.
 
+
+## Benchmarks
+
+One of the goals for BespON is "acceptable" performance even when completely
+implemented in an interpreted language.  So far, the pure Python
+implementation is promising.  It only contains minimal optimizations
+(avoidance of globals, use of `__slots__`), and has significant overhead
+since it saves detailed source information about each data object to support
+round tripping.  In spite of this, under CPython it can be only about 2 times
+slower than LibYAML, the *C implementation* of YAML.  Under
+[PyPy](http://pypy.org/), the pure Python implementation can actually be
+significantly faster than LibYAML.  An implementation of BespON that left out
+the round-trip data, or used [Cython](http://cython.org/), could likely be
+even faster.
+
+The benchmark data below was created using the
+[BespON Python benchmark code](https://github.com/bespon/bespon_python_benchmark).
+It should not be interpreted as making a definitive statement about BespON
+performance under Python, since that will depend on the nature of specific
+data sets and the features used to represent them.  Nevertheless, it does
+indicate that BespON performance can be competitive with that of similar
+formats.
+
+![BespON benchmark](img/benchmark.png)
+
+The data from the plot is duplicated below in text form.  It also includes
+additional JSON data that was omitted from the plot to improve clarity.
+
+```text
+PACKAGE                                           TIME (s)
+----------------------------------------------------------
+json, Python 2.7 (PyPy, Linux):                   0.010970
+json, Python 3.5 (CPython, Linux):                0.015541
+json, Python 3.6 (CPython, Windows):              0.017222
+json, Python 2.7 (PyPy, Windows):                 0.018549
+json, Python 3.5 (PyPy, Linux):                   0.025390
+json, Python 2.7 (CPython, Linux):                0.031828
+json, Python 2.7 (CPython, Windows):              0.033475
+bespon, Python 3.5 (PyPy, Linux):                 0.395049
+bespon, Python 2.7 (PyPy, Linux):                 0.419876
+bespon, Python 2.7 (PyPy, Windows):               0.434258
+yaml (CLoader), Python 3.6 (CPython, Windows):    0.583341
+bespon, Python 3.5 (CPython, Linux):              1.136635
+bespon, Python 3.6 (CPython, Windows):            1.221588
+bespon, Python 2.7 (CPython, Linux):              1.374798
+toml, Python 3.6 (CPython, Windows):              1.404044
+bespon, Python 2.7 (CPython, Windows):            1.436316
+pytoml, Python 3.6 (CPython, Windows):            5.091966
+yaml, Python 2.7 (CPython, Windows):              8.091318
+yaml, Python 3.6 (CPython, Windows):              8.910164
+```
 
 
 ## Stability
