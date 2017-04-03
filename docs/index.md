@@ -103,8 +103,39 @@ Now the requisite XKCD reference is out of the way, why BespON?
 ## Getting started
 
 A [Python implementation](https://github.com/gpoore/bespon_py) is available
-now.  It supports loading and saving data.  Round trip support for modifying
-data is almost complete and is coming very soon.
+now.  It supports loading and saving data.
+
+There is also round trip support for changing the values of strings, floats,
+ints, and bools.  For example,
+```
+>>> import bespon
+>>> ast = bespon.loads_roundtrip_ast("""
+key.subkey.first = 123   # Comment
+key.subkey.second = 0b1101
+key.subkey.third = `literal \string`
+""")
+>>> ast.replace_key(['key', 'subkey'], 'sk')
+>>> ast.replace_val(['key', 'sk', 'second'], 7)
+>>> ast.replace_val(['key', 'sk', 'third'], '\\another \\literal')
+>>> ast.replace_key(['key', 'sk', 'third'], 'fourth')
+>>> print(ast.dumps())
+
+key.sk.first = 123   # Comment
+key.sk.second = 0b111
+key.sk.fourth = `\another \literal`
+```
+This example illustrates several of the round trip capabilities.
+
+  * Comments and layout are preserved exactly.
+  * Key renaming works with key paths.  Every time a key appears in key paths,
+    it is renamed.
+  * When a number is modified, the new value is expressed in the same base as
+    the old value.
+  * When a quoted string is modified, the new value is quoted in the same
+    style as the old value (at least to the extent that this is practical).
+  * As soon as a key is modified, the new key must be used for further
+    modifications.  The old key is invalid.
+
 
 There is also a
 [language-agnostic test suite](https://github.com/bespon/bespon_tests),
@@ -127,6 +158,7 @@ even faster.
 
 The benchmark data below was created using the
 [BespON Python benchmark code](https://github.com/bespon/bespon_python_benchmark).
+All data is from a single machine with Windows 10 and Ubuntu 16.04.
 It should not be interpreted as making a definitive statement about BespON
 performance under Python, since that will depend on the nature of specific
 data sets and the features used to represent them.  Nevertheless, it does
