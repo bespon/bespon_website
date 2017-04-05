@@ -33,10 +33,9 @@ Take a look:
 
 `literal key without \ escapes` = ``literal value without `\` escapes``
 
-# ASCII identifier-style strings are allowed unquoted.  Keys cannot contain
-# spaces; values can contain single spaces and must be on one line.
+# ASCII identifier-style strings are allowed unquoted.
 # Unquoted Unicode identifiers can optionally be enabled.
-unquoted_key = unquoted value
+unquoted_key = unquoted_value
 
 inline_dict = {key1 = value1, key2 = value2,}  # Trailing commas are fine.
 
@@ -78,8 +77,7 @@ Now the requisite XKCD reference is out of the way, why BespON?
   * **Comments**.  And doc comments that are uniquely associated with
     individual data objects, and thus may always be round-tripped correctly.
   * **Trailing commas**.
-  * **Unquoted strings**.  But only identifier-style strings or unambiguous
-    number-unit style strings (like `12pt`), and never broken across a line.
+  * **Unquoted strings**.  But only identifier-style strings.
   * **Multiline strings** with indentation preserved *relative to delimiters*.
     Multiline strings with obvious leading/trailing whitespace, since it's
     inside delimiters.

@@ -117,21 +117,6 @@ a variant of `none`/`true`/`false`/`inf`/`nan` may be used anywhere,
 including as dict keys.  These must match the regular expression
 `_*[A-Za-z][0-9A-Z_a-z]*`.
 
-Unquoted strings that start with an ASCII identifier and then contain ASCII
-identifier characters separated by single spaces are allowed anywhere except
-as dict keys.  Such unquoted strings are never allowed to break across lines.
-These must match the regular expression
-`_*[A-Za-z][0-9A-Z_a-z]*(?: [0-9A-Z_a-z]+)*`.
-
-Finally, unquoted strings that consist of a decimal integer or float followed
-immediately (with no separating space) by a sequence of one or more ASCII
-letters are allowed anywhere, with the restriction that the sequence of
-ASCII letters cannot be confusable with the syntax for any current or
-possible future number literal.  Thus, something like `12.0pt` is a valid
-unquoted string, but `12.0e` is not, because it looks like an incomplete
-floating point value.  The percent sign may be used instead of an ASCII
-letter sequence; something like `12.0%` is also valid as an unquoted string.
-
 Implementations should provide an option to enable unquoted strings based on
 Unicode identifiers, using Unicode properties `XID_Start` and `XID_Continue`
 with the omission of the Hangul filler code points U+115F, U+1160, U+3164,
@@ -185,9 +170,10 @@ the closing delimiter.  They start with a pipe `|` followed by a sequence of
 single or double quotation marks or backticks.  The rest of the line after
 this opening sequence must contain nothing but whitespace (space, tab, line
 feed).  The sequence must be a multiple of 3 characters in length and no
-longer than 90 characters.  The string ends when the same sequence is found
-between a pipe `|` and a slash `/`.  The sequence must not appear unescaped
-anywhere within the string.
+longer than 90 characters.  The string ends when the same sequence of
+quotation marks/backticks is found between a pipe `|` and a slash `/`.  The
+sequence must not appear unescaped anywhere else within the string.  Shorter
+or longer sequences of quotation marks/backticks are allowed unescaped.
 
 For example,
 ``````text
