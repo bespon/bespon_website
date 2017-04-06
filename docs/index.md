@@ -100,7 +100,7 @@ Now the requisite XKCD reference is out of the way, why BespON?
 
 ## Getting started
 
-A [Python implementation](https://github.com/gpoore/bespon_py) is available
+A [**Python implementation**](https://github.com/gpoore/bespon_py) is available
 now.  It supports loading and saving data.
 
 There is also round trip support for changing the values of strings, floats,
@@ -135,9 +135,15 @@ This example illustrates several of the round trip capabilities.
     modifications.  The old key is invalid.
 
 
-There is also a
-[language-agnostic test suite](https://github.com/bespon/bespon_tests),
+There is a
+[**syntax highlighting extension**](https://github.com/bespon/bespon_vscode)
+for Visual Studio Code.  It has been posted to the Visual Studio Marketplace,
+so it can be installed with the built-in extension manager.
+
+There is a
+[**language-agnostic test suite**](https://github.com/bespon/bespon_tests),
 which the Python implementation passes.
+
 
 
 ## Benchmarks
