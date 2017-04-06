@@ -2,7 +2,7 @@ string_color = '#009926'
 
 with open('site/css/highlight.css', encoding='utf8') as f:
     data = f.read()
-data.replace('#d14', string_color)
+data = data.replace('#d14', string_color)
 with open('site/css/highlight.css', 'w', encoding='utf8', newline='\n') as f:
     f.write(data)
 
