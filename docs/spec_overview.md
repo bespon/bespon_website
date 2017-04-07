@@ -1,4 +1,4 @@
-# BespON Specification Overview
+# BespON Specification
 
 This is an overview of the BespON specification.  A more formal,
 more detailed specification will follow as soon as the Python implementation
@@ -45,7 +45,7 @@ None/null/undefined is represented as `none`.  All other capitalizations of
 `none` are invalid and must produce errors.  Unlike YAML, uppercase and
 titlecase variants of reserved words are NOT equivalent to their lowercase
 versions, and other capitalization variants are NOT valid unquoted strings.
-The literal string `none`, in any capitalization, can only be represented by
+The literal string "none", in any capitalization, can only be represented by
 using a quoted string.
 
 
@@ -54,9 +54,9 @@ using a quoted string.
 
 Boolean values are represented as `true` and `false`.  As with `none`, all
 other capitalizations are invalid and must produce errors.  The only way
-to obtain the literal strings `true` and `false`, in any capitalization, is
-to use quoted strings.  Unlike TOML, boolean literals have a constant type
-in all contexts; they are not strings when used as dict keys, but booleans
+to obtain the literal strings "true" and "false", in any capitalization, is
+to use quoted strings.  Unlike TOML, the meanings of `true` and `false` are
+NOT context-dependent; they are not strings when used as dict keys, but booleans
 when used as dict values.
 
 
@@ -99,7 +99,7 @@ Implementations are expected to use float types compatible with IEEE 754
 binary64.
 
 Infinity is represented as `inf`, and not a number as `nan`.  All other
-capitalizations are invalid, and the literal strings `inf` and `nan` require
+capitalizations are invalid, and the literal strings "inf" and "nan" require
 quoted strings.
 
 
@@ -143,8 +143,8 @@ A string that starts with one quotation mark `'` or `"` ends at the next
 identical quotation mark that is not backslash-escaped.  The sequences `''`
 and `""` represent the empty string.  Longer delimiter sequences such as
 `'''` and `"""` may be used to include any unescaped delimiter sequence that
-is shorter or longer than the delimiters.  Such sequences must be multiples
-of 3 characters in length and no longer than 90 characters.
+is shorter or longer than the delimiters.  Such delimiter sequences must be
+multiples of 3 characters in length and no longer than 90 characters.
 
 Strings delimited by backticks begin with a delimiter sequence of length
 1, 2, 3, or a multiple of 3 no longer than 90 characters, and end when the
@@ -157,11 +157,11 @@ backtick `` ` ``.
 
 Inline quoted strings may be wrapped over multiple lines.  When this is done,
 the indentation of the first continuation line must be equal to or greater
-than that of the line on which it begins, and any subsequent continuation
-lines must have that same indentation.  Wrapped quoted strings are unwrapped
-by replacing each line break with a space if the last character before the
-break does not have the Unicode property `White_Space`, and simply stripping
-breaks otherwise.
+than that of the line on which the string begins, and any subsequent
+continuation lines must have that same indentation.  Wrapped quoted strings
+are unwrapped by replacing each line break with a space if the last character
+before the break does not have the Unicode property `White_Space`, and simply
+stripping breaks otherwise.
 
 ### Quoted block strings
 
@@ -224,6 +224,20 @@ then the `*` is ignored in calculating the total indentation; otherwise it
 is treated as equivalent to a space.  In indentation-based syntax, all `*`
 in a list must have the same indentation, and all objects that follow them
 must also have the same indentation.
+
+When a list is within a list, each successive asterisk must be on a new line.
+Thus,
+```text
+*
+  * text
+```
+is equivalent to
+```text
+[[text]]
+```
+
+An asterisk cannot be used alone without a following object to represent the
+empty list.  The empty list must always be represented explicitly as `[]`.
 
 There is also a more compact, inline syntax for lists, in which the list is
 delimited by square brackets `[...]` and individual list elements are
@@ -344,7 +358,7 @@ since that is outside the scope.
 
 Sections provide a way to use indentation-based syntax without using
 deep indentation.  A section is started by a pipe `|` followed by a sequence
-of equals signs whose length is a multiple of 3 and is no longer than 90
+of equals signs `=` whose length is a multiple of 3 and is no longer than 90
 characters.  This is followed by a key path or a key, which must terminate
 on the line where the key path begins (line breaks are not permitted).
 Everything after the section start is included under the specified key path
@@ -436,13 +450,13 @@ this will rarely be possible, the next best thing would be to require that
 right-to-left code points only appear in contexts in which this sort of
 key-value reversal in visual rendering is not possible.
 
-By default, whenever a string contains code points with Unicode
-`Bidi_Class` R or AL on its last line, no string or number is allowed to
-follow it on that line.  Any following object must be on a subsequent line,
-to avoid the potential of confusion due to bidirectional rendering.  Such
-a string may still be followed by a comma `,`, bracket `]`, brace `}`,
-equals sign `=`, or other non-string, non-digit element, since this will not
-introduce the possibility of ambiguous rendering.
+By default, whenever a string contains code points with Unicode `Bidi_Class` R
+or AL on its last line, no string, number, or comment is allowed to follow it
+on that line.  Any following object must be on a subsequent line, to avoid the
+potential of confusion due to bidirectional rendering.  Such a string may
+still be followed by a comma `,`, bracket `]`, brace `}`, equals sign `=`, or
+other non-string, non-digit element, since this will not introduce the
+possibility of ambiguous rendering.
 
 
 
