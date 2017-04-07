@@ -399,10 +399,10 @@ must be closed explicitly.
 
 ## Tags
 
-All types discussed thus far are implicitly typed.  BespON also provides for
-explicitly typed objects, with the tagging syntax `(tag)>`.  Support for
-tags and associated binary types will be added to the Python implementation
-soon.
+BespON provides for explicitly typed objects, with the tagging syntax
+`(tag)>`.  Support for tags will be added to the Python implementation soon.
+By default, tags will only be used to support binary types and perhaps a few
+other types beyond those already discussed.
 
 Tag syntax makes possible byte strings.
 ```text
@@ -414,8 +414,8 @@ It also makes possible arbitrary binary data.
 * (base64)> 'U29tZSB0ZXh0'
 ```
 
-Tag syntax will eventually provide support for additional types, and provide
-an optional extension mechanism for user-defined types.
+Tag syntax will eventually provide an optional extension mechanism for
+user-defined types.
 
 
 
@@ -498,3 +498,15 @@ The rules about indentation-based syntax apply to these as well.
 
 Because doc comments are uniquely associated with individual data objects,
 they may survive round tripping even when data is added or removed.
+
+
+
+## Roadmap
+
+Some possible features are still under consideration, and may be added either
+as required features or as optional extensions.
+
+  * Support for labeling values in dicts or elements in lists, and then
+    referring to them elsewhere by label to create aliases or copies.
+  * Support for a dict to inherit initial values or default fallback values
+    from another dict.  Support for dict merging.
