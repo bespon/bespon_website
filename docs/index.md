@@ -12,14 +12,14 @@ and number support, and lossless round-tripping.
 
   * **Strings and numbers** – Literal and escaped multiline strings that are
     ideal for storing template text.  Floats *and* integers, in multiple
-    bases, with full IEEE 754 support.
+    bases, with Infinity and NaN to support IEEE 754.
 
   * **Lossless round-tripping** – Designed to be loaded by a computer,
     modified, and then saved while retaining exact layout, including comments.
 
 Take a look:
 
-<div style="padding: 1em;color: #d4d4d4;background-color: #1e1e1e;font-family: Consolas, 'Courier New', monospace;font-weight: normal;font-size: 14px;line-height: 19px;white-space: pre;"><div><span style="color: #608b4e;"># Line comments are allowed!  They can always be round-tripped as long as data</span></div><div><span style="color: #608b4e;"># elements are only modified, not added or removed.</span></div><br><div><span style="color: #608b4e;">### This is a doc comment.  It can always be round-tripped.###</span></div><div><span style="color: #608b4e;"># Only one doc comment is allowed per data element; another couldn't be here.</span></div><br><div><span style="color: #ce9178;">"quoted key with \x5C escapes"</span><span style="color: #d4d4d4;"> = </span><span style="color: #ce9178;">'quoted value with \u{5C} escapes'</span></div><br><div><span style="color: #ce9178;">`literal key without \ escapes`</span><span style="color: #d4d4d4;"> = </span><span style="color: #ce9178;">``literal value without `\` escapes``</span></div><br><div><span style="color: #608b4e;"># ASCII identifier-style strings are allowed unquoted.</span></div><div><span style="color: #608b4e;"># Unquoted Unicode identifiers can optionally be enabled.</span></div><div><span style="color: #ce9178;">unquoted_key</span><span style="color: #d4d4d4;"> = </span><span style="color: #ce9178;">unquoted_value</span></div><br><div><span style="color: #ce9178;">inline_dict</span><span style="color: #d4d4d4;"> = {</span><span style="color: #ce9178;">key1</span><span style="color: #d4d4d4;"> = </span><span style="color: #ce9178;">value1</span><span style="color: #d4d4d4;">, </span><span style="color: #ce9178;">key2</span><span style="color: #d4d4d4;"> = </span><span style="color: #ce9178;">value2</span><span style="color: #d4d4d4;">,}  </span><span style="color: #608b4e;"># Trailing commas are fine.</span></div><br><div><span style="color: #ce9178;">inline_list_of_ints</span><span style="color: #d4d4d4;"> = [</span><span style="color: #b5cea8;">1</span><span style="color: #d4d4d4;">, </span><span style="color: #569cd6;">0x</span><span style="color: #b5cea8;">12</span><span style="color: #d4d4d4;">, </span><span style="color: #569cd6;">0o</span><span style="color: #b5cea8;">755</span><span style="color: #d4d4d4;">, </span><span style="color: #569cd6;">0b</span><span style="color: #b5cea8;">1010</span><span style="color: #d4d4d4;">]  </span><span style="color: #608b4e;"># Hex, octal, and binary!</span></div><br><div><span style="color: #ce9178;">list_of_floats</span><span style="color: #d4d4d4;"> =</span></div><div><span style="color: #d4d4d4;">  * </span><span style="color: #b5cea8;">1.2e3</span></div><div><span style="color: #d4d4d4;">  * </span><span style="color: #b5cea8;">-inf</span><span style="color: #d4d4d4;">  </span><span style="color: #608b4e;"># Full IEEE 754 compatibility.  Infinity and NaN are not excluded.</span></div><div><span style="color: #d4d4d4;">  * </span><span style="color: #569cd6;">0x</span><span style="color: #b5cea8;">4.3p2</span><span style="color: #d4d4d4;">  </span><span style="color: #608b4e;"># Hex floats, to avoid rounding issues.</span></div><br><div><span style="color: #ce9178;">wrapped_string</span><span style="color: #d4d4d4;"> = </span><span style="color: #ce9178;">"""string containing no whitespace lines in which line breaks</span></div><div><span style="color: #ce9178;">    are replaced with spaces, and "quotes" are possible by via delimiters"""</span></div><br><div><span style="color: #ce9178;">multiline_literal_string</span><span style="color: #d4d4d4;"> = </span><span style="color: #ce9178;">|```</span></div><div><span style="color: #ce9178;">        A literal string in which linebreaks are kept (as '\n')</span></div><div><span style="color: #ce9178;">        and leading indentation (relative to delimiters) is preserved,</span></div><div><span style="color: #ce9178;">        with special delimiters always on lines by themselves.</span></div><div><span style="color: #ce9178;">    |```/</span></div><br><div><span style="color: #ce9178;">multiline_escaped_string</span><span style="color: #d4d4d4;"> = </span><span style="color: #ce9178;">|"""</span></div><div><span style="color: #ce9178;">    The same idea as the literal string, but with backslash escapes.</span></div><div><span style="color: #ce9178;">    |"""/</span></div><br><div><span style="color: #ce9178;">key1</span><span style="color: #d4d4d4;">.</span><span style="color: #ce9178;">key2</span><span style="color: #d4d4d4;"> = </span><span style="color: #569cd6;">true</span><span style="color: #d4d4d4;">  </span><span style="color: #608b4e;"># Key path style; same as "key1 = {key2 = true}"</span></div><br><div><span style="color: #d4d4d4;">|=== </span><span style="color: #ce9178;">section</span><span style="color: #d4d4d4;">.</span><span style="color: #ce9178;">subsection</span><span style="color: #d4d4d4;">  </span><span style="color: #608b4e;"># Same as "section = {subsection = {key = value}}"</span></div><div><span style="color: #ce9178;">key</span><span style="color: #d4d4d4;"> = </span><span style="color: #ce9178;">value</span></div><div><span style="color: #d4d4d4;">|===/  </span><span style="color: #608b4e;"># Back to root level.  Can be omitted if sections never return to root.</span></div><br></div>
+<div style="display: inline-block;overflow-x: auto;width: 100%;padding: 1em;color: #d4d4d4;background-color: #1e1e1e;font-family: Consolas, 'Courier New', monospace;font-weight: normal;font-size: 14px;line-height: 19px;white-space: pre;"><div><span style="color: #608b4e;"># Line comments are allowed!  They can always be round-tripped as long as data</span></div><div><span style="color: #608b4e;"># elements are only modified, not added or removed.</span></div><br><div><span style="color: #608b4e;">### This is a doc comment.  It can always be round-tripped.###</span></div><div><span style="color: #608b4e;"># Only one doc comment is allowed per data element; another couldn't be here.</span></div><br><div><span style="color: #ce9178;">"quoted key with \x5C escapes"</span><span style="color: #d4d4d4;"> = </span><span style="color: #ce9178;">'quoted value with \u{5C} escapes'</span></div><br><div><span style="color: #ce9178;">`literal key without \ escapes`</span><span style="color: #d4d4d4;"> = </span><span style="color: #ce9178;">``literal value without `\` escapes``</span></div><br><div><span style="color: #608b4e;"># ASCII identifier-style strings are allowed unquoted.</span></div><div><span style="color: #608b4e;"># Unquoted Unicode identifiers can optionally be enabled.</span></div><div><span style="color: #ce9178;">unquoted_key</span><span style="color: #d4d4d4;"> = </span><span style="color: #ce9178;">unquoted_value</span></div><br><div><span style="color: #ce9178;">inline_dict</span><span style="color: #d4d4d4;"> = {</span><span style="color: #ce9178;">key1</span><span style="color: #d4d4d4;"> = </span><span style="color: #ce9178;">value1</span><span style="color: #d4d4d4;">, </span><span style="color: #ce9178;">key2</span><span style="color: #d4d4d4;"> = </span><span style="color: #ce9178;">value2</span><span style="color: #d4d4d4;">,}  </span><span style="color: #608b4e;"># Trailing commas are fine.</span></div><br><div><span style="color: #ce9178;">inline_list_of_ints</span><span style="color: #d4d4d4;"> = [</span><span style="color: #b5cea8;">1</span><span style="color: #d4d4d4;">, </span><span style="color: #569cd6;">0x</span><span style="color: #b5cea8;">12</span><span style="color: #d4d4d4;">, </span><span style="color: #569cd6;">0o</span><span style="color: #b5cea8;">755</span><span style="color: #d4d4d4;">, </span><span style="color: #569cd6;">0b</span><span style="color: #b5cea8;">1010</span><span style="color: #d4d4d4;">]  </span><span style="color: #608b4e;"># Hex, octal, and binary!</span></div><br><div><span style="color: #ce9178;">list_of_floats</span><span style="color: #d4d4d4;"> =</span></div><div><span style="color: #d4d4d4;">  * </span><span style="color: #b5cea8;">1.2e3</span></div><div><span style="color: #d4d4d4;">  * </span><span style="color: #b5cea8;">-inf</span><span style="color: #d4d4d4;">  </span><span style="color: #608b4e;"># Full IEEE 754 compatibility.  Infinity and NaN are not excluded.</span></div><div><span style="color: #d4d4d4;">  * </span><span style="color: #569cd6;">0x</span><span style="color: #b5cea8;">4.3p2</span><span style="color: #d4d4d4;">  </span><span style="color: #608b4e;"># Hex floats, to avoid rounding issues.</span></div><br><div><span style="color: #ce9178;">wrapped_string</span><span style="color: #d4d4d4;"> = </span><span style="color: #ce9178;">"""string containing no whitespace lines in which line breaks</span></div><div><span style="color: #ce9178;">    are replaced with spaces, and "quotes" are possible by via delimiters"""</span></div><br><div><span style="color: #ce9178;">multiline_literal_string</span><span style="color: #d4d4d4;"> = </span><span style="color: #ce9178;">|```</span></div><div><span style="color: #ce9178;">        A literal string in which linebreaks are kept (as '\n')</span></div><div><span style="color: #ce9178;">        and leading indentation (relative to delimiters) is preserved,</span></div><div><span style="color: #ce9178;">        with special delimiters always on lines by themselves.</span></div><div><span style="color: #ce9178;">    |```/</span></div><br><div><span style="color: #ce9178;">multiline_escaped_string</span><span style="color: #d4d4d4;"> = </span><span style="color: #ce9178;">|"""</span></div><div><span style="color: #ce9178;">    The same idea as the literal string, but with backslash escapes.</span></div><div><span style="color: #ce9178;">    |"""/</span></div><br><div><span style="color: #ce9178;">key1</span><span style="color: #d4d4d4;">.</span><span style="color: #ce9178;">key2</span><span style="color: #d4d4d4;"> = </span><span style="color: #569cd6;">true</span><span style="color: #d4d4d4;">  </span><span style="color: #608b4e;"># Key path style; same as "key1 = {key2 = true}"</span></div><br><div><span style="color: #d4d4d4;">|=== </span><span style="color: #ce9178;">section</span><span style="color: #d4d4d4;">.</span><span style="color: #ce9178;">subsection</span><span style="color: #d4d4d4;">  </span><span style="color: #608b4e;"># Same as "section = {subsection = {key = value}}"</span></div><div><span style="color: #ce9178;">key</span><span style="color: #d4d4d4;"> = </span><span style="color: #ce9178;">value</span></div><div><span style="color: #d4d4d4;">|===/  </span><span style="color: #608b4e;"># Back to root level.  Can be omitted if sections never return to root.</span></div><br></div>
 
 <br>
 
@@ -36,9 +36,9 @@ Now that the requisite XKCD reference is out of the way, why BespON?
     is allowed per data element.  This brings the possibility of
     round-tripping with arbitrary data manipulation while retaining all (doc)
     comments.
-  * **Trailing commas**.
+  * **Trailing commas**.  No more errors from things like `{key = value,}`.
   * **Unquoted strings**.  But only identifier-style strings, and only strings
-    that do NOT match reserved words like `true` under any capitalization.
+    that do *not* match reserved words like `true` under any capitalization.
   * **Consistent reserved words**.  `true` is *always* boolean True.  It isn't
     boolean True or the string "true" depending on whether it happens to
     appear as a dict key or as a dict value.
@@ -51,18 +51,19 @@ Now that the requisite XKCD reference is out of the way, why BespON?
     with backslash escapes are supported.
   * **Integers**.  And integers with various bases (decimal, hex, octal,
     binary).
-  * **Full IEEE 754 floating point support** with Infinity and NaN,
+  * **Full IEEE 754 floating point compatibility** with Infinity and NaN,
     including hex floats for cases when rounding errors aren't acceptable.
   * **Immutable data object model**.  Duplicate keys in dicts are invalid and
     must result in an error.
-  * **A small list of special characters**.  Every ASCII punctuation character
-    does NOT have its own, special meaning.  No constant wondering about what
-    is allowed unquoted, and if it will appear as itself or something else.
+  * **A small number of special characters**.  Every ASCII punctuation
+    character does *not* have its own, special meaning.  No constant wondering
+    about what is allowed unquoted, and if it will appear as itself or
+    something else.
   * **Sections and key paths** for conveniently representing nested data
     structures, without ending up with bracket soup or half a page width of
     indentation.
   * **"Acceptable" performance** even when completely implemented in an
-    interpreted language (see the benchmarks below).
+    interpreted language (see the [benchmarks](index.md#benchmarks)).
 
 
 
@@ -141,7 +142,7 @@ data sets and the features used to represent them.  Nevertheless, it does
 indicate that BespON performance can be competitive with that of similar
 formats.
 
-![BespON benchmark](img/benchmark.png)
+[![BespON benchmark](img/benchmark.png)](img/benchmark.png)
 
 The data from the plot is duplicated below in text form.  This also includes
 additional JSON data that was omitted from the plot to improve clarity.
@@ -173,8 +174,9 @@ yaml, Python 3.6 (CPython, Windows):              8.910164
 
 ## Stability
 
-All current features are expected to be stable.  The objective is a final
-version 1.0 of the Python implementation by the end of summer 2017.
+While changes are still possible, all current features are expected to be
+stable.  The objective is a final version 1.0 of the Python implementation by
+the end of summer 2017.
 
 
 

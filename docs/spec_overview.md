@@ -2,7 +2,8 @@
 
 This is an overview of the BespON specification.  A more formal,
 more detailed specification will follow as soon as the Python implementation
-is refined further.  More details are available in the Python implementation,
+is refined further.  More details are available in the
+[Python implementation](https://github.com/gpoore/bespon_py),
 particularly in `grammar.py` and `re_patterns.py`.
 
 
@@ -163,11 +164,11 @@ are unwrapped by replacing each line break with a space if the last character
 before the break does not have the Unicode property `White_Space`, and simply
 stripping breaks otherwise.
 
-### Quoted block strings
+### Quoted multiline strings
 
-Quoted block strings preserve literal line breaks and indentation relative to
-the closing delimiter.  They start with a pipe `|` followed by a sequence of
-single or double quotation marks or backticks.  The rest of the line after
+Quoted multiline strings preserve literal line breaks and indentation relative
+to the closing delimiter.  They start with a pipe `|` followed by a sequence
+of single or double quotation marks or backticks.  The rest of the line after
 this opening sequence must contain nothing but whitespace (space, tab, line
 feed).  The sequence must be a multiple of 3 characters in length and no
 longer than 90 characters.  The string ends when the same sequence of
@@ -184,10 +185,10 @@ First line
 ``````
 would be equivalent to `"First line\n    second line\n"`.  Note that literal
 line breaks and indentation relative to the closing delimiter are preserved.
-When a block string starts at the beginning of a line, the opening and
+When a multiline string starts at the beginning of a line, the opening and
 closing delimiters must have the same indentation.  Otherwise, the closing
 delimiter must have indentation greater than or equal to that of the line
-on which the block string begins.
+on which the multiline string begins.
 
 The choice of `'` and `"` versus `` ` `` in the delimiters determines whether
 backslash escapes are enabled.  When they are, a backslash followed
@@ -203,6 +204,18 @@ would be equivalent to `"First lineSecond line"`.
 
 
 
+## Indentation
+
+Collection types (lists and dicts) may be represented with an
+indentation-based syntax.  Both spaces and tabs are allowed as indentation,
+although use of spaces is strongly encouraged.
+
+If spaces and tabs are mixed in indentation, total indentation level is
+determined by the exact, literal sequence of spaces and tabs, *never* by
+converting tabs into some equivalent number of spaces.
+
+
+
 ## Lists
 
 Lists are ordered collections of objects.  Objects are not all required to be
@@ -212,7 +225,8 @@ By default, an implementation must raise an error if the total nesting depth
 of all collection objects (lists and dicts) exceeds 100.
 
 There are two list syntaxes.  In indentation-based syntax, list elements are
-denoted with asterisks `*`.  For example,
+denoted with asterisks `*`.  An asterisk must not be preceded on its line by
+anything except for indentation.  For example,
 ```text
 * 'First element'
 * 'Second element'
@@ -226,7 +240,8 @@ in a list must have the same indentation, and all objects that follow them
 must also have the same indentation.
 
 When a list is within a list, each successive asterisk must be on a new line.
-Thus,
+Asterisks in sub-lists must be indented relative to those in higher-level
+lists.  Thus,
 ```text
 *
   * text
@@ -246,8 +261,12 @@ separated by commas.  For example,
 ['First element', 'Second element']
 ```
 Everything within an inline list must have indentation greater than or equal
-to that of the line on which the list started.  While logical and consistent
-indentation beyond this is encouraged, it is not enforced in any way.
+to that of the line on which the list started.  The only exception is if an
+inline list occurs within an inline collection type, in which case it inherits
+the indentation level of the parent collection, and everything within it must
+have indentation greater than or equal to that indentation level.  While
+logical and consistent indentation beyond this is encouraged, it is not
+enforced in any way.
 
 
 
@@ -268,9 +287,12 @@ supported as keys in some programming languages.
 Duplicate keys are strictly prohibited.
 
 As with lists, there are two syntaxes for dicts.  In indentation-based syntax,
-all keys must have the same indentation, and values must have indentation
-consistent with their keys.  Keys and values are separated by equals signs
-`=`.  For example,
+all keys must have the same indentation.  A key must not be preceded on its
+line by anything except for indentation (and an asterisk `*` if in a list, or
+a tag if explicitly typed).  Values must have indentation consistent with
+their keys.  Values that do not follow their keys on the same line must be
+indented relative to their keys.  Keys and values are separated by equals
+signs `=`.  For example,
 ```text
 key = value
 another_key = 'another value that
@@ -290,9 +312,18 @@ key-value pairs are separated by commas.  For example,
 {key = value, another_key = another_value}
 ```
 As with inline lists, everything within an inline dict must have indentation
-greater than or equal to that of the line on which the dict started.  While
-logical and consistent indentation beyond this is encouraged, it is not
-enforced in any way.
+greater than or equal to that of the line on which the dict started.  The only
+exception is if an inline dict occurs within an inline collection type, in
+which case it inherits the indentation level of the parent collection, and
+everything within it must have indentation greater than or equal to that
+indentation level.  While logical and consistent indentation beyond this is
+encouraged, it is not enforced in any way.
+
+In an indentation-style dict, an equals sign `=` must be on the same line as
+the end of its key.  In an inline-style dict, an equals sign is permitted to
+be the first thing on the line immediately following the end of its key to
+provide resiliance against poor line breaking, but purposely doing this is
+strongly discouraged.
 
 
 
@@ -389,11 +420,11 @@ is equivalent to
 
 A section ends at the next section.  Alternatively, it is possible to return
 to the top (root) level of the data structure by using the section closing
-element, which has the form `|===/`.  This parallels the delimiters for block
-strings.  However, when this is used to close a section, the number of equals
-signs `=` in the closing element must match the number used to open the
-section.  Furthermore, if the closing element is ever used, then ALL sections
-must be closed explicitly.
+element, which has the form `|===/`.  This parallels the delimiters for
+multiline strings.  However, when this is used to close a section, the number
+of equals signs `=` in the closing element must match the number used to open
+the section.  Furthermore, if the closing element is ever used, then ALL
+sections must be closed explicitly.
 
 
 
@@ -466,9 +497,9 @@ Comments come in two forms.
 
 Line comments start with a single number sign `#` that is not followed
 immediately by another `#`, and go to the end of the line.  Line comments may
-optionally be preserved in round tripping that only modifies data, as opposed
+optionally be preserved in round-tripping that only modifies data, as opposed
 to adding or deleting values.  However, line comments cannot in general
-survive round tripping, because they may appear anywhere, with any
+survive round-tripping, because they may appear anywhere, with any
 indentation, in any quantity.  So far as syntax is concerned, they are not
 uniquely associated with any particular data element.
 
@@ -481,15 +512,17 @@ multiple of 3 and is no longer than 90.  They follow the same rules as inline
 quoted strings, with two additional restriction in indentation-based
 syntax:
 
-  * A doc comment must have the same indentation as its object.
+  * A doc comment must have the same indentation as its object, unless the
+    object is tagged, in which case the doc comment must have the same
+    indentation as the tag.
   * If a doc comment starts at the beginning of a line, it cannot be followed
-    on its last line by anything (other than a line comment).
+    on its last line by anything other than a line comment.
 
-Doc comments also come in a block form, that follows the same rules as block
-strings:
+Doc comments also come in a multiline form, that follows the same rules as
+multiline strings:
 ```text
 |###
-Block doc comments.
+Multiline doc comments.
 
 These can contain empty lines.
 |###/
@@ -497,7 +530,7 @@ These can contain empty lines.
 The rules about indentation-based syntax apply to these as well.
 
 Because doc comments are uniquely associated with individual data objects,
-they may survive round tripping even when data is added or removed.
+they may survive round-tripping even when data is added or removed.
 
 
 
