@@ -2,7 +2,7 @@
 
 This is an overview of the BespON specification.  A more formal,
 more detailed specification will follow as soon as the Python implementation
-is refined further.  More details are available in the
+is refined further.  Additional details are available in the
 [Python implementation](https://github.com/gpoore/bespon_py),
 particularly in `grammar.py` and `re_patterns.py`.
 
@@ -13,8 +13,8 @@ The default encoding for BespON files is UTF-8.  The default extension
 is `.bespon`.
 
 As a text-based format, BespON is specified at the level of Unicode code
-points.  Some code points are always invalid as literals within BespON data,
-and may only be transmitted in backslash-escaped form within strings.
+points.  Some code points are always invalid as literals within encoded BespON
+data, and may only be transmitted in backslash-escaped form within strings.
 
   * All code points with Unicode `General_Category` Cc (control characters)
     are prohibited as literals, with the exception of the horizontal tab
@@ -42,9 +42,9 @@ and may only be transmitted in backslash-escaped form within strings.
 
 ## None type
 
-None/null/undefined is represented as `none`.  All other capitalizations of
+None/null/nil is represented as `none`.  All other capitalizations of
 `none` are invalid and must produce errors.  Unlike YAML, uppercase and
-titlecase variants of reserved words are NOT equivalent to their lowercase
+titlecase variants of keywords words are NOT equivalent to their lowercase
 versions, and other capitalization variants are NOT valid unquoted strings.
 The literal string "none", in any capitalization, can only be represented by
 using a quoted string.
@@ -96,12 +96,14 @@ Signs `+` and `-` may be separated from the first digit character by spaces
 or tabs, but this is discouraged.  Breaking a line between a sign and the
 number to which it belongs is prohibited.
 
-Implementations are expected to use float types compatible with IEEE 754
-binary64.
-
-Infinity is represented as `inf`, and not a number as `nan`.  All other
+Infinity is represented as `inf`, and not-a-number as `nan`.  All other
 capitalizations are invalid, and the literal strings "inf" and "nan" require
 quoted strings.
+
+Implementations are expected to use float types compatible with IEEE 754
+binary64.  Any non-`inf` float value that cannot fit in an implementation's
+float type must result in an error by default, rather than overflowing to
+`inf`.
 
 
 
@@ -113,10 +115,10 @@ in BespON format, or after loading data, is encouraged as appropriate.
 
 ### Unquoted strings
 
-Unquoted strings that fit the pattern for an ASCII identifier and are not
-a variant of `none`/`true`/`false`/`inf`/`nan` may be used anywhere,
-including as dict keys.  These must match the regular expression
-`_*[A-Za-z][0-9A-Z_a-z]*`.
+Unquoted strings that fit the pattern for an ASCII identifier and are not a
+variant of `none`/`true`/`false`/`inf`/`nan` or a reserved word based on `inf`
+or `nan` may be used anywhere, including as dict keys.  These must match the
+regular expression `_*[A-Za-z][0-9A-Z_a-z]*`.
 
 Implementations should provide an option to enable unquoted strings based on
 Unicode identifiers, using Unicode properties `XID_Start` and `XID_Continue`
@@ -153,8 +155,8 @@ same delimiter sequence is next encountered.  This is similar to Markdown.
 These are literal strings; there are no backslash escapes.  If the first
 non-space character at the beginning or end of a literal string is a
 backtick, then one space at that end of the string is stripped.  This allows,
-for example, the sequence ``` `` ` `` ``` to represent the single
-backtick `` ` ``.
+for example, the sequence `` ` ``` ` `` to represent the triple
+backticks ` ``` `.
 
 Inline quoted strings may be wrapped over multiple lines.  When this is done,
 the indentation of the first continuation line must be equal to or greater
@@ -185,10 +187,10 @@ First line
 ``````
 would be equivalent to `"First line\n    second line\n"`.  Note that literal
 line breaks and indentation relative to the closing delimiter are preserved.
-When a multiline string starts at the beginning of a line, the opening and
-closing delimiters must have the same indentation.  Otherwise, the closing
-delimiter must have indentation greater than or equal to that of the line
-on which the multiline string begins.
+When a multiline string starts at the beginning of a line or is only preceded
+by whitespace, the opening and closing delimiters must have the same
+indentation.  Otherwise, the closing delimiter must have indentation greater
+than or equal to that of the line on which the multiline string begins.
 
 The choice of `'` and `"` versus `` ` `` in the delimiters determines whether
 backslash escapes are enabled.  When they are, a backslash followed
@@ -261,7 +263,7 @@ separated by commas.  For example,
 ['First element', 'Second element']
 ```
 Everything within an inline list must have indentation greater than or equal
-to that of the line on which the list started.  The only exception is if an
+to that of the line on which the list starts.  The only exception is if an
 inline list occurs within an inline collection type, in which case it inherits
 the indentation level of the parent collection, and everything within it must
 have indentation greater than or equal to that indentation level.  While
@@ -381,7 +383,8 @@ key =
 it would be possible to add `subkey.another_subsubkey` at the `subkey` level,
 because key paths based on `subkey` are still within scope.  However, it
 would not be possible to use `key.subkey.another_subkey` at the `key` level,
-since that is outside the scope.
+since that is outside the scope.  Scoping ensures that all data for a given
+dict is somewhat localized.
 
 
 
@@ -423,17 +426,54 @@ to the top (root) level of the data structure by using the section closing
 element, which has the form `|===/`.  This parallels the delimiters for
 multiline strings.  However, when this is used to close a section, the number
 of equals signs `=` in the closing element must match the number used to open
-the section.  Furthermore, if the closing element is ever used, then ALL
+the section.  Furthermore, if the closing element is ever used, then *all*
 sections must be closed explicitly.
+
+
+
+## Aliases
+
+Aliases are used to reference objects that have previously been
+[labeled](spec_overview.md#labels).  Aliases consist of a dollar sign `$`
+followed immediately by a label, which is an unquoted string.
+
+When an alias refers to a dict, then key path-style `$alias.key.subkey`
+notation is supported to refer to objects inside the dict.  This avoids having
+to label each dict value explicitly.
+
+There are also two special aliases that always exist.  `$~` refers to the
+top level of the data structure.  Since `~` is not a valid unquoted string,
+this alias can never be overwritten by the user.  Similarly, `$_` is an
+alias to the current collection.  This can be useful in a list to insert
+a reference to itself (`$_`) or in a dict to reuse the value of an
+earlier key (`$_.earlier_key`).
+
+Implementations must provide an option to disable aliases, since they add some
+additional complexity and indirection, and it may be desirable to avoid using
+them under some circumstances.  (The complexity involved is not as great
+as might be imagined, though.  In the Python implementation, resolving aliases
+only takes around 140 lines of code more than the non-alias case.)
+
+Aliases are not permitted as dict keys.  This would make it significantly
+harder for a user to determine whether duplicate keys exist.  It would
+also make `$alias.key.subkey` syntax ambiguous.  (Is it a single key
+located at `$alias.key.subkey`, or a key path consisting of `$alias` followed
+by `key.subkey`?)
 
 
 
 ## Tags
 
 BespON provides for explicitly typed objects, with the tagging syntax
-`(tag)>`.  Support for tags will be added to the Python implementation soon.
-By default, tags will only be used to support binary types and perhaps a few
-other types beyond those already discussed.
+`(tag)>`.  By default, tags will only be used to support binary types and
+perhaps a few other types beyond those already discussed.  Tag syntax will
+eventually provide an optional extension mechanism for user-defined types.
+
+Tags also allow data to be labeled for later referencing via aliases,
+allow the indentation and newlines in a string to be specified in
+a shorthand form, and permit inheritance for collections.
+
+### Binary types
 
 Tag syntax makes possible byte strings.
 ```text
@@ -445,8 +485,131 @@ It also makes possible arbitrary binary data.
 * (base64)> 'U29tZSB0ZXh0'
 ```
 
-Tag syntax will eventually provide an optional extension mechanism for
-user-defined types.
+When a binary type is applied to a string delimited by double or single
+quotation marks, only `\xHH` escapes are permitted.
+
+The `bytes` type can only be applied to strings containing literal code points
+in the ASCII range (before any backslash-escaping is applied).
+
+The exact requirements for `base16` and `base64` typed strings may still be
+refined in the future.  Using a string containing backslash-escapes for
+`base16` or `base64` is currently permitted but discouraged.  The current
+string requirements for both types are relatively strict.  It is possible
+that this may be relaxed somewhat.
+
+The `base16` type must only be applied to strings in which all non-numeric hex
+characters have the same case (uppercase or lowercase).  Multiline strings and
+inline strings wrapped over multiple lines are permitted (all trailing spaces
+and line feeds on each line are stripped before processing), but leading
+whitespace on a line and trailing empty lines at the end of a string are
+prohibited.  Each two-character sequence (representing a byte) may be
+separated from the next two-character sequence with a single space, but only
+if this is done throughout the entire string; otherwise, internal whitespace
+is prohibited.
+
+The `base64` type follows similar rules to `base16`.  Multiline strings are
+permitted (all trailing spaces and line feeds on each line are stripped before
+processing), but leading whitespace on a line and trailing empty lines at the
+end of a string are prohibited.  Internal whitespace within a line is
+prohibited, and as a result, using `base64` with wrapped inline strings is not
+possible.  Inline strings that are not wrapped, with no leading or trailing
+whitespace, are permitted.
+
+### Labels
+
+Tags allow data objects to be labeled, for later referencing via aliases.
+For example,
+```text
+(bytes, label=bin_data)> 'Some text'
+```
+A label must always be an unquoted string.  Allowing arbitrary code points in
+labels would have confusability implications.
+
+Labels are currently not allowed for dict keys.
+
+When a label and a type occur in a tag, the type must always be first.  The
+type may be omitted when the default type for the following object is desired
+and the default type may be inferred.  In practice, this means that for
+standard, non-binary types, the type may always be omitted except in the case
+of dicts in indentation-style syntax.  In those cases, the type is currently
+required.  This restriction may be removed once label and alias rules are
+further refined.  (Dict keys are not currently allowed to be labeled, to
+parallel the fact that aliases currently are not allowed as keys.  However,
+if dict keys were allowed to be labeled, then that could make a label at the
+beginning of an indentation-style dict ambiguous.  Does it apply to the dict
+or to the first key?)
+
+### Strings
+
+The tag keywords `indent` and `newline` may be applied to strings to customize
+indentation and newline sequences.  These are only allowed for multiline
+strings.
+
+`indent` specifies a sequences of spaces and tabs that is added to the
+beginning of each line that follows a literal (not escaped) line break (as
+well as the first line).
+
+`newline` specifies a sequence of code points that is used to replace all
+literal line feeds (`\n`).  Only the empty string and code point sequences
+considered a newline in the Unicode standard
+([chapter 5.8, "Newline Guidelines"](http://www.unicode.org/versions/Unicode9.0.0/ch05.pdf))
+are permitted:
+```text
+['', '\r\n', '\n', '\v', '\f', '\r', '\x85', '\u2028', '\u2029']
+```
+There is the further restriction that only newline sequences in the ASCII
+range are permitted for strings that are explicitly typed with a binary
+type (for example, `bytes`).
+
+
+### Inheritance
+
+Dicts support two tag keywords for inheritance.  `init` specifies an alias
+or inline list of aliases to dicts that are used for initialization.  All
+the keys supplied by these dicts must not duplicate each other or duplicate
+the keys directly entered in a dict using `init`.  The prohibition on
+duplicate keys still holds.  `default` specifies an alias or inline list
+of aliases to dicts that are used to supply defaults.  Because these are
+default, fallback values, duplicate keys are allowed, and do not overwrite
+existing keys.  For example,
+```pycon
+>>> bespon.loads("""
+initial =
+    (dict, label=init)>
+    first = a
+default =
+    (dict, label=def)>
+    last = z
+    k = default_v
+settings =
+    (dict, init=$init, default=$def)>
+    k = v
+""")
+{'initial': {'first': 'a'},
+ 'default': {'last': 'z', 'k': 'default_v'},
+ 'settings': {'first': 'a', 'k': 'v', 'last': 'z'}}
+```
+
+Lists also support two tag keywords for inheritance.  `init` specifies an
+alias or inline list of aliases to lists whose elements are inserted at the
+beginning of a list using `init`.  `extend` specifies an alias or inline list
+of aliases to lists whose elements are appended at the end of a list using
+`extend`, after all explicit elements have been inserted.  For example,
+```pycon
+>>> bespon.loads("""
+initial_1 = (label=init1)> [1, 2]
+initial_2 = (label=init2)> [3, 4]
+extend = (label=ex)> [7]
+settings = (init=[$init1, $init2], extend=$ex)> [5, 6]
+""")
+{'initial_1': [1, 2],
+ 'initial_2': [3, 4],
+ 'extend': [7],
+ 'settings': [1, 2, 3, 4, 5, 6, 7]}
+```
+
+Additional inheritance-related features, including a recursive merge for
+dicts, are under consideration.
 
 
 
@@ -534,12 +697,43 @@ they may survive round-tripping even when data is added or removed.
 
 
 
+## Extended types
+
+An implementation may provide optional, non-default support for additional
+types.  The exact set of recommended optional types, and their precise
+definition, may be revised in the future; this is not guaranteed to be
+stable.
+
+### Numbers
+
+* **Rational number literals** use the form `1/2`, where the numerator and
+  denominator must both be decimal integers, and any sign must come before the
+  fraction (with optional, discouraged whitespace after the sign and on both
+  sides of the slash).
+* **Complex number literals** use the general form `1.0+2.0i`, where the real
+  part is optional, the imaginary unit is represented with `i`, and numbers
+  must be floats (either both in decimal or both in hex form, unless one
+  is `inf` or `nan`).
+
+To allow for the possibility of complex number literals, and provide the
+widest possible scope for their definition, three letters are currently
+reserved as number literal units: `i`, `j`, and `k`.  This means that `infi`,
+`infj`, `infk`, `nani`, `nanj`, `nank`, and all capitalization variants are
+reserved words.  This technically would allow for quaternion literals,
+although that is not currently planned.
+
+### Collections
+
+* `set`:  Applied to a list to return an unordered collection in which all
+  objects are unique.
+* `odict`:  Ordered dict, in which key order is preserved.
+
+
+
 ## Roadmap
 
 Some possible features are still under consideration, and may be added either
 as required features or as optional extensions.
 
-  * Support for labeling values in dicts or elements in lists, and then
-    referring to them elsewhere by label to create aliases or copies.
-  * Support for a dict to inherit initial values or default fallback values
-    from another dict.  Support for dict merging.
+  * `copy` and `deepcopy` types based on aliases.
+  * Support for recursive dict merging.
