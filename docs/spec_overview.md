@@ -128,7 +128,8 @@ default because of the confusability and security implications of using
 unquoted non-ASCII code points.
 
 Implementations should also provide an option to disable unquoted strings.
-This can be useful when it is desirable to avoid any potential for ambiguity.
+This can be useful when it is desirable to avoid absolutely any potential for
+ambiguity.
 
 ### Quoted inline strings
 
@@ -460,6 +461,10 @@ also make `$alias.key.subkey` syntax ambiguous.  (Is it a single key
 located at `$alias.key.subkey`, or a key path consisting of `$alias` followed
 by `key.subkey`?)
 
+By default, implementations must check for circular references and raise an
+error when they are detected.  Implementations should provide optional support
+for circular references.
+
 
 
 ## Tags
@@ -701,8 +706,11 @@ they may survive round-tripping even when data is added or removed.
 
 An implementation may provide optional, non-default support for additional
 types.  The exact set of recommended optional types, and their precise
-definition, may be revised in the future; this is not guaranteed to be
-stable.
+definition, may be revised in the future; this is not guaranteed to be stable.
+Even once the set of recommended optional types stabilizes, implementations
+may support additional, optional, language-specific data types that are in
+common use; for example, the Python implementation provides optional support
+for tuples.
 
 ### Numbers
 

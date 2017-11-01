@@ -62,6 +62,12 @@ Now that the requisite XKCD reference is out of the way, why BespON?
   * **Sections and key paths** for conveniently representing nested data
     structures, without ending up with bracket soup or half a page width of
     indentation.
+  * **Inheritance**.  Shared default or fallback values only need to be
+    specified once.
+  * **Optional support for aliases and circular references** to avoid data
+    duplication and allow complex data relationships.
+  * **Round-trip support.** Programmatically replace keys or values, or access
+    or even modify comments – while keeping *all* layout and comments.
   * **"Acceptable" performance** even when completely implemented in an
     interpreted language (see the [benchmarks](index.md#benchmarks)).
 
@@ -76,8 +82,8 @@ pip install bespon
 ```
 
 The `bespon` package for Python supports loading and saving data.  There is
-also round-trip support for changing the values of strings, floats, ints, and
-bools (changing types is not currently supported).  For example,
+also round-trip support for modifying keys and values while keeping formatting
+and comments.  For example,
 ```
 >>> import bespon
 >>> ast = bespon.loads_roundtrip_ast("""
@@ -106,6 +112,28 @@ This illustrates several of the round-trip capabilities.
     style as the old value (at least to the extent that this is practical).
   * As soon as a key is modified, the new key must be used for further
     modifications.  The old key is invalid.
+
+The [development version](https://github.com/gpoore/bespon_py) of the `bespon`
+package already provides several additional round-trip features that are
+being refined for the next release.  For example,
+```
+>>> ast = bespon.loads_roundtrip_ast("""
+### key doc comment ###
+key =  # key trailing comment
+    value  # value trailing comment
+""")
+>>> ast['key'].key = 'new_key'
+>>> ast['new_key'].key_doc_comment = ' new key doc '
+>>> ast['new_key'].key_trailing_comment = ' key trailing...'
+>>> ast['new_key'].value = 'val'
+>>> ast['new_key'].value_trailing_comment = ' val trailing...'
+>>> print(ast.dumps())
+
+### new key doc ###
+new_key =  # key trailing...
+    val  # val trailing...
+```
+
 
 
 There is a
@@ -154,8 +182,8 @@ formats.
 ## Stability
 
 While changes are still possible, all current features are expected to be
-stable.  The objective is a final version 1.0 of the Python implementation by
-the end of summer 2017.
+stable.  Development is currently focused on refining existing features and
+adding more powerful round-trip functionality.
 
 
 
