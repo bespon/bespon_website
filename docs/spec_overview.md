@@ -143,12 +143,20 @@ characters must have the same case (uppercase or lowercase) within a given
 escape.
 
 Strings delimited by single and double quotation marks follow the same rules.
-A string that starts with one quotation mark `'` or `"` ends at the next
+A string delimited by only one quotation mark `'` or `"` begins immediately
+after the opening quotation mark and ends immediately before the next
 identical quotation mark that is not backslash-escaped.  The sequences `''`
-and `""` represent the empty string.  Longer delimiter sequences such as
-`'''` and `"""` may be used to include any unescaped delimiter sequence that
-is shorter or longer than the delimiters.  Such delimiter sequences must be
-multiples of 3 characters in length and no longer than 90 characters.
+and `""` represent the empty string.  Longer delimiter sequences such as `'''`
+and `"""` can be used to minimize the need for backslash escapes.  Such
+delimiter sequences must be multiples of 3 characters in length and no longer
+than 90 characters.  The string begins immediately after the opening delimiter
+sequence and ends immediately before the next occurrence of the sequence that
+is not backslash-escaped and is not part of a longer sequence of the delimiter
+character.  A string using these longer delimiters can include any unescaped
+sequence of the delimiter character that is shorter or longer than the
+delimiter sequence, with one exception.  The first and last characters in a
+string must be backslash-escaped if they are the delimiter character.  This
+prevents any ambiguity about the beginning and end of the string.
 
 Strings delimited by backticks begin with a delimiter sequence of length
 1, 2, 3, or a multiple of 3 no longer than 90 characters, and end when the
