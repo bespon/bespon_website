@@ -1,5 +1,5 @@
 site_name:  'BespON: Bespoken Object Notation'
 theme: readthedocs
-pages:
+nav:
 - 'index.md'
 - 'spec_overview.md'
